@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Data and Calendar</title>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #0066cc;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .user-info {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex-basis: 45%;
+        }
+
+        .chart-container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex-basis: 45%;
+        }
+
+        h2 {
+            color: #0066cc;
+            margin-bottom: 15px;
+        }
+
+        .chart-container .bars rect {
+            fill: green !important;
+        }
+
+        .negative-savings {
+            color: red;
+        }
+
+        .positive-savings {
+            color: green;
+        }
+
+        #calendar-container {
+            align-self: flex-start; /* Align to the bottom left */
+            margin-top: auto; /* Push to the bottom */
+            margin-left: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        td {
+            cursor: pointer;
+        }
+
+        .highlight {
+            background-color: #4caf50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="user-info">
+            <h1>User Data</h1>
+            <p>User ID: {{ user_id }}</p>
+            <p>Name: {{ name_stud }}</p>
+            <p>User ID: {{ user_id }}</p>
+            <p>Name: {{ name_stud }}</p>
+            <p>Email: {{ email }}</p>
+            <p>University: {{ university }}</p>
+            <p>City: {{ city }}</p>
+            <p>Age: {{ age }}</p>
+            <p>Gender: {{ gender }}</p>
+            <p>Monthly Budget: ${{ monthly_budget }}</p>
+            <p>Total Expense before discounts: ${{ total_expense_before_discounts }}</p>
+            <p>Total Savings before discounts: <span class="negative-savings">${{ total_saving_before_discounts }}</span></p>
+            <p>Total Expense after discounts: ${{ total_expense_after_discounts }}</p>
+            <p>Total Savings after discounts: <span class="positive-savings">${{ total_saving_after_discounts }}</span></p>
+            <p>Tuition Due Date: {{ tuition_fees_due_date }}</p>
+            <p>Insurance Due Date: {{ insurance_due_date }}</p>
+        </div>
+
+        <div class="chart-container">
+            <h2>Stacked Bar Chart of Expenses</h2>
+            {{ chart_html|safe }}
+        </div>
+    </div>
+
+    <div id="calendar-container">
+        <h2 id="month-year">Dynamic Calendar</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sun</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                </tr>
+            </thead>
+            <tbody id="calendar-body">
+                <!-- Calendar days will be inserted here dynamically using JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Replace the following line with the dynamic date you want to highlight
+            var dateToHighlight = new Date('{{ tuition_fees_due_date }}');
+
+            // Get the day, month, and year from the provided date
+            var day = dateToHighlight.getDate();
+            var month = dateToHighlight.getMonth();
+            var year = dateToHighlight.getFullYear();
+
+            // Generate calendar for the specified month and year
+            generateCalendar(month, year);
+
+            // Highlight the provided date
+            highlightDate(day, month, year);
+
+            // Add click event listener to each day
+            var days = document.querySelectorAll('td');
+            days.forEach(function (day) {
+                day.addEventListener('click', function () {
+                    // Remove highlight from previously highlighted date
+                    document.querySelector('.highlight').classList.remove('highlight');
+                    // Highlight the clicked date
+                    this.classList.add('highlight');
+                });
+            });
+        });
+
+        // Function to generate the calendar for a specific month and year
+        function generateCalendar(month, year) {
+            var firstDay = new Date(year, month, 1);
+            var lastDay = new Date(year, month + 1, 0);
+            var daysInMonth = lastDay.getDate();
+
+            var calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = '';
+
+            // Display the month and year
+            
+            var monthYearHeader = document.getElementById('month-year');
+            monthYearHeader.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(firstDay);
+
+            var dayCounter = 1;
+
+            for (var i = 0; i < 6; i++) {
+                var row = document.createElement('tr');
+
+                for (var j = 0; j < 7; j++) {
+                var cell = document.createElement('td');
+
+                if (i === 0 && j < firstDay.getDay()) {
+                    // Empty cells before the first day of the month
+                    cell.textContent = '';
+                } else if (dayCounter <= daysInMonth) {
+                    cell.textContent = dayCounter;
+                    cell.setAttribute('data-day', dayCounter);
+                    cell.setAttribute('data-month', month);
+                    cell.setAttribute('data-year', year);
+                    dayCounter++;
+                }
+
+                row.appendChild(cell);
+                }
+
+                calendarBody.appendChild(row);
+            }
+        }
+
+        // Function to highlight a specific date
+        function highlightDate(day, month, year) {
+            // Find the cell corresponding to the specified date
+            day=day+1
+            var cell = document.querySelector('td[data-day="' + day + '"][data-month="' + month + '"][data-year="' + year + '"]');
+            // Highlight the cell
+            // cell.classList.add('highlight');
+            cell.classList.add('highlight');
+        }
+    </script>
+</body>
+</html>
