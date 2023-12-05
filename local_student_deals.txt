@@ -1,0 +1,101 @@
+Local student discount tables:
+We have priority of students for each of the four stores.
+We calculated which store maximum students have given Priority 1 and created a new table as final_discounts with each store name and discount as 20% for max(count(priority 1).
+Store with the maximum count of priority 1 will have a discount of 20%, then the second top store will have a 15% discount and so on.
+
+ 
+-- Create a temporary table to store the counts for each priority value
+CREATE TEMPORARY TABLE priority_counts AS
+SELECT
+    user_id,
+    MAX(CASE WHEN subway = 'Priority 1' THEN 1 ELSE 0 END) AS subway_p1,
+    MAX(CASE WHEN subway = 'Priority 2' THEN 1 ELSE 0 END) AS subway_p2,
+    MAX(CASE WHEN subway = 'Priority 3' THEN 1 ELSE 0 END) AS subway_p3,
+    MAX(CASE WHEN subway = 'Priority 4' THEN 1 ELSE 0 END) AS subway_p4,
+    MAX(CASE WHEN starbucks = 'Priority 1' THEN 1 ELSE 0 END) AS starbucks_p1,
+    MAX(CASE WHEN starbucks = 'Priority 2' THEN 1 ELSE 0 END) AS starbucks_p2,
+    MAX(CASE WHEN starbucks = 'Priority 3' THEN 1 ELSE 0 END) AS starbucks_p3,
+    MAX(CASE WHEN starbucks = 'Priority 4' THEN 1 ELSE 0 END) AS starbucks_p4,
+    MAX(CASE WHEN tacobell = 'Priority 1' THEN 1 ELSE 0 END) AS tacobell_p1,
+    MAX(CASE WHEN tacobell = 'Priority 2' THEN 1 ELSE 0 END) AS tacobell_p2,
+    MAX(CASE WHEN tacobell = 'Priority 3' THEN 1 ELSE 0 END) AS tacobell_p3,
+    MAX(CASE WHEN tacobell = 'Priority 4' THEN 1 ELSE 0 END) AS tacobell_p4,
+    MAX(CASE WHEN walmart = 'Priority 1' THEN 1 ELSE 0 END) AS walmart_p1,
+    MAX(CASE WHEN walmart = 'Priority 2' THEN 1 ELSE 0 END) AS walmart_p2,
+    MAX(CASE WHEN walmart = 'Priority 3' THEN 1 ELSE 0 END) AS walmart_p3,
+    MAX(CASE WHEN walmart = 'Priority 4' THEN 1 ELSE 0 END) AS walmart_p4
+FROM "Local Student Deals"
+GROUP BY user_id;
+ 
+-- Create the discounts table
+CREATE TABLE discounts AS
+SELECT
+    CASE WHEN walmart_p1 >= walmart_p2 AND walmart_p1 >= walmart_p3 AND walmart_p1 >= walmart_p4 THEN 20
+         WHEN walmart_p2 > walmart_p1 AND walmart_p2 >= walmart_p3 AND walmart_p2 >= walmart_p4 THEN 15
+         WHEN walmart_p3 > walmart_p1 AND walmart_p3 > walmart_p2 AND walmart_p3 >= walmart_p4 THEN 10
+         ELSE 5 END AS walmart,
+    
+    CASE WHEN subway_p1 >= subway_p2 AND subway_p1 >= subway_p3 AND subway_p1 >= subway_p4 THEN 20
+         WHEN subway_p2 > subway_p1 AND subway_p2 >= subway_p3 AND subway_p2 >= subway_p4 THEN 15
+         WHEN subway_p3 > subway_p1 AND subway_p3 > subway_p2 AND subway_p3 >= subway_p4 THEN 10
+         ELSE 5 END AS subway,
+    
+    CASE WHEN starbucks_p1 >= starbucks_p2 AND starbucks_p1 >= starbucks_p3 AND starbucks_p1 >= starbucks_p4 THEN 20
+         WHEN starbucks_p2 > starbucks_p1 AND starbucks_p2 >= starbucks_p3 AND starbucks_p2 >= starbucks_p4 THEN 15
+         WHEN starbucks_p3 > starbucks_p1 AND starbucks_p3 > starbucks_p2 AND starbucks_p3 >= starbucks_p4 THEN 10
+         ELSE 5 END AS starbucks,
+    
+    CASE WHEN tacobell_p1 >= tacobell_p2 AND tacobell_p1 >= tacobell_p3 AND tacobell_p1 >= tacobell_p4 THEN 20
+         WHEN tacobell_p2 > tacobell_p1 AND tacobell_p2 >= tacobell_p3 AND tacobell_p2 >= tacobell_p4 THEN 15
+         WHEN tacobell_p3 > tacobell_p1 AND tacobell_p3 > tacobell_p2 AND tacobell_p3 >= tacobell_p4 THEN 10
+         ELSE 5 END AS tacobell
+FROM priority_counts;
+ 
+ 
+ 
+ 
+-- Create a temporary table to store the counts for each discount value and each store
+CREATE TEMPORARY TABLE discount_counts AS
+SELECT
+    COUNT(CASE WHEN walmart = 20 THEN 1 END) AS walmart_20_count,
+    COUNT(CASE WHEN walmart = 15 THEN 1 END) AS walmart_15_count,
+    COUNT(CASE WHEN walmart = 5 THEN 1 END) AS walmart_5_count,
+    
+    COUNT(CASE WHEN subway = 20 THEN 1 END) AS subway_20_count,
+    COUNT(CASE WHEN subway = 15 THEN 1 END) AS subway_15_count,
+    COUNT(CASE WHEN subway = 5 THEN 1 END) AS subway_5_count,
+    
+    COUNT(CASE WHEN starbucks = 20 THEN 1 END) AS starbucks_20_count,
+    COUNT(CASE WHEN starbucks = 15 THEN 1 END) AS starbucks_15_count,
+    COUNT(CASE WHEN starbucks = 5 THEN 1 END) AS starbucks_5_count,
+    
+    COUNT(CASE WHEN tacobell = 20 THEN 1 END) AS tacobell_20_count,
+    COUNT(CASE WHEN tacobell = 15 THEN 1 END) AS tacobell_15_count,
+    COUNT(CASE WHEN tacobell = 5 THEN 1 END) AS tacobell_5_count
+FROM discounts;
+ 
+-- Create the final discounts table
+CREATE TABLE final_discounts AS
+SELECT
+    CASE WHEN walmart_20_count >= subway_20_count AND walmart_20_count >= starbucks_20_count AND walmart_20_count >= tacobell_20_count THEN 20
+         WHEN subway_20_count > walmart_20_count AND subway_20_count >= starbucks_20_count AND subway_20_count >= tacobell_20_count THEN 20
+         WHEN starbucks_20_count > walmart_20_count AND starbucks_20_count > subway_20_count AND starbucks_20_count >= tacobell_20_count THEN 20
+         ELSE 20 END AS walmart_discount,
+    
+    CASE WHEN walmart_15_count >= subway_15_count AND walmart_15_count >= starbucks_15_count AND walmart_15_count >= tacobell_15_count THEN 15
+         WHEN subway_15_count > walmart_15_count AND subway_15_count >= starbucks_15_count AND subway_15_count >= tacobell_15_count THEN 15
+         WHEN starbucks_15_count > walmart_15_count AND starbucks_15_count > subway_15_count AND starbucks_15_count >= tacobell_15_count THEN 15
+         ELSE 15 END AS subway_discount,
+    
+    CASE WHEN walmart_5_count >= subway_5_count AND walmart_5_count >= starbucks_5_count AND walmart_5_count >= tacobell_5_count THEN 5
+         WHEN subway_5_count > walmart_5_count AND subway_5_count >= starbucks_5_count AND subway_5_count >= tacobell_5_count THEN 5
+         WHEN starbucks_5_count > walmart_5_count AND starbucks_5_count > subway_5_count AND starbucks_5_count >= tacobell_5_count THEN 5
+         ELSE 5 END AS starbucks_discount,
+    
+    CASE WHEN walmart_15_count >= subway_15_count AND walmart_15_count >= starbucks_15_count AND walmart_15_count >= tacobell_15_count THEN 15
+         WHEN subway_15_count > walmart_15_count AND subway_15_count >= starbucks_15_count AND subway_15_count >= tacobell_15_count THEN 15
+         WHEN starbucks_15_count > walmart_15_count AND starbucks_15_count > subway_15_count AND starbucks_15_count >= tacobell_15_count THEN 15
+         ELSE 15 END AS tacobell_discount
+                         
+FROM discount_counts;
+
